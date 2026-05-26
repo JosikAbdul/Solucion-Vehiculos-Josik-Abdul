@@ -1,0 +1,16 @@
+default_platform(:android)
+
+platform :android do
+  desc "Carril para compilar el archivo APK de la App del Conductor"
+  lane :build_apk do
+    gradle(
+      task: "clean",
+      project_dir: "android"
+    )
+    gradle(
+      task: "assemble",
+      build_type: "Release",
+      project_dir: "android"
+    )
+  end
+end

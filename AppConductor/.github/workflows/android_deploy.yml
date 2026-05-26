@@ -1,0 +1,48 @@
+name: CI/CD Movil - Despliegue de la App
+
+on:
+  push:
+    branches: [ main ] # Esto hace que se active cuando subes cambios a la rama main
+
+jobs:
+  distribute_android:
+    name: Compilacion Automatizada de Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar Codigo fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar Dependencias
+        run: npm install
+
+      - name: Configurar Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Generar Codigo Nativo Android
+        run: npx expo prebuild --platform android
+
+      - name: Configurar Ruby y Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+
+      - name: Ejecutar Compilacion con Fastlane
+        run: |
+          gem install fastlane
+          fastlane android build_apk
+
+      - name: Guardar e Instalar APK resultante
+        uses: actions/upload-artifact@v4
+        with:
+          name: AppConductor-Release-APK
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 7
