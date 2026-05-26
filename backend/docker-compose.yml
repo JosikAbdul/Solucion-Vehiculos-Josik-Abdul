@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+ 
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v23.3.5
+    command:
+      - redpanda start
+      - --smp 1
+      - --overprovisioned
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+    ports:
+      - "19092:19092"
+
+  
+  console:
+    image: docker.redpanda.com/redpandadata/console:v2.4.2
+    environment:
+      KAFKA_BROKERS: "redpanda:9092"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redpanda
+
+  
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    environment:
+      POSTGRES_USER: josik_admin
+      POSTGRES_PASSWORD: MiPasswordSeguro2026
+      POSTGRES_DB: fleet_db
+    ports:
+      - "5432:5432"
+
+  
+  backend_api:
+    build: . 
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redpanda
+      - timescaledb
+    environment:
+      - KAFKA_SERVER=redpanda:9092 
+      - DATABASE_URL=postgresql://josik_admin:MiPasswordSeguro2026@timescaledb:5432/fleet_db
